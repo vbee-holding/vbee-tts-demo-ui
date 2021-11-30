@@ -1,0 +1,25 @@
+.background {
+    width: 100%;
+    height: 100vh;
+    padding-top: 50px;
+    background-color: rgb(240, 240, 240);
+}
+
+.box {
+    width: 750px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    background-color: #ffffff;
+    border-radius: 5px;
+}
+
+.spinner {
+    width: "3rem";
+    height: "3rem";
+}
+
+@media only screen and (max-width: 750px) {
+    .box {
+        width: 100%;
+    }
+}

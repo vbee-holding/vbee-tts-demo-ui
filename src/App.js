@@ -1,5 +1,7 @@
+import TextToSpeech from "./pages/TextToSpeech";
+
 function App() {
-    return <></>;
+    return <TextToSpeech />;
 }
 
 export default App;
