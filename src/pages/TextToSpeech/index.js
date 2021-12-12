@@ -4,57 +4,62 @@ import * as apis from "../../api";
 import "./styles.css";
 
 const TextToSpeech = () => {
-    const [listTech, setListTech] = useState([]);
-    const [listVoice, setListVoice] = useState([]);
-    const [isSelectedTech, setIsSelectedTech] = useState({});
-    const [selectedListVoice, setSelectedListVoice] = useState([]);
-    const [isSelectedVoice, setIsSelectedVoice] = useState({});
+    const [techList, setTechList] = useState([]);
+    const [voices, setVoices] = useState([]);
+    const [selectedTech, setSelectedTech] = useState({});
+    const [selectedVoices, setSelectedVoices] = useState([]);
+    const [selectedVoice, setSelectedVoice] = useState({});
     const [error, setError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [text, setText] = useState("");
     const [isDisplay, setIsDisplay] = useState(false);
 
-    useEffect(() => {
-        const fetchTeches = async () => {
-            setIsLoading(true);
-            const data = await apis.getSynthesisTeches();
-            if (data.status) {
-                setListTech(data.result);
-                if (data.result && data.result[0]) setIsSelectedTech(data.result[0]);
-            } else {
-                setError(true);
-            }
-            setIsLoading(false);
-        };
+    const fetchTeches = async () => {
+        setIsLoading(true);
+        const data = await apis.getSynthesisTeches();
+        if (data.status) {
+            setTechList(data.result);
+            if (data.result && data.result[0]) setSelectedTech(data.result[0]);
+        } else {
+            setError(true);
+        }
+        setIsLoading(false);
+    };
 
-        const fetchVoices = async () => {
-            setIsLoading(true);
-            const data = await apis.getVoices();
-            if (data.status) {
-                setListVoice(data.result);
-            } else {
-                setError(true);
-            }
-            setIsLoading(false);
-        };
+    const fetchVoices = async () => {
+        setIsLoading(true);
+        const data = await apis.getVoices();
+        if (data.status) {
+            setVoices(data.result);
+        } else {
+            setError(true);
+        }
+        setIsLoading(false);
+    };
+
+    useEffect(() => {
         fetchTeches();
         fetchVoices();
     }, []);
 
     useEffect(() => {
-        const list = listVoice.filter((voice) => voice.synthesisTech === isSelectedTech.id);
+        const validVoices = voices.filter((voice) => voice.synthesisTech === selectedTech.id);
 
-        setSelectedListVoice(list);
-        if (list[0]) {
-            setIsSelectedVoice(list[0]);
+        setSelectedVoices(validVoices);
+        if (validVoices.length) {
+            setSelectedVoice(validVoices[0]);
         } else {
-            setIsSelectedVoice({});
+            setSelectedVoice({});
         }
-    }, [listVoice, isSelectedTech]);
+    }, [voices, selectedTech]);
 
     const handleChange = (e) => {
-        const currentVoice = selectedListVoice.filter((voice) => voice.id === e.target.value)[0];
-        setIsSelectedVoice(currentVoice);
+        const validVoices = selectedVoices.filter((voice) => voice.id === e.target.value);
+        if (validVoices.length) {
+            setSelectedVoice(validVoices[0]);
+        } else {
+            setSelectedVoice({});
+        }
     };
 
     const handleReset = () => {
@@ -62,8 +67,8 @@ const TextToSpeech = () => {
         setText("");
     };
 
-    const handleRead = async () => {
-        const data = await apis.convertText({ voice: isSelectedVoice.key, input_text: text });
+    const handleCreateSynthesis = async () => {
+        const data = await apis.createSynthesis(selectedVoice.key, text);
         if (data.status) {
             setIsDisplay(true);
             let audioElement = document.getElementById("audioElement");
@@ -76,7 +81,7 @@ const TextToSpeech = () => {
     if (error) {
         return (
             <Alert className='mt-5 me-5 ms-5' color='danger'>
-                Something went wrong ...
+                Lỗi tải xuống dữ liệu
             </Alert>
         );
     }
@@ -95,7 +100,7 @@ const TextToSpeech = () => {
                 <FormGroup className='mb-3'>
                     <Label className='mb-2 h6'>Công nghệ TTS</Label>
                     <Row>
-                        {listTech.map((tech) => (
+                        {techList.map((tech) => (
                             <Col key={tech.id}>
                                 <FormGroup check>
                                     <Label check>
@@ -103,8 +108,8 @@ const TextToSpeech = () => {
                                             type='radio'
                                             name='tech'
                                             value={tech.id}
-                                            onChange={() => setIsSelectedTech(tech)}
-                                            checked={isSelectedTech.id === tech.id}
+                                            onChange={() => setSelectedTech(tech)}
+                                            checked={selectedTech.id === tech.id}
                                         />
                                         {tech.id}
                                     </Label>
@@ -115,8 +120,8 @@ const TextToSpeech = () => {
                 </FormGroup>
                 <FormGroup className='mb-3'>
                     <Label className='h6 mb-2'>Giọng đọc</Label>
-                    <Input type='select' name='voice' value={isSelectedVoice.id} onChange={handleChange}>
-                        {selectedListVoice.map((voice) => (
+                    <Input type='select' name='voice' value={selectedVoice.id} onChange={handleChange}>
+                        {selectedVoices.map((voice) => (
                             <option key={voice.id} value={voice.id}>
                                 {voice.name}
                             </option>
@@ -143,7 +148,7 @@ const TextToSpeech = () => {
                     />
                 </FormGroup>
                 <FormGroup className='mb-4 text-center'>
-                    <Button color='primary' onClick={handleRead} disabled={text.length <= 0}>
+                    <Button color='primary' onClick={handleCreateSynthesis} disabled={text.length <= 0}>
                         Đọc ngay
                     </Button>
                 </FormGroup>
